@@ -1,0 +1,48 @@
+{
+  "name": "front-helper",
+  "version": "1.0.1",
+  "description": "一个node脚手架",
+  "main": "dist/index.js",
+  "keywords": [
+    "node"
+  ],
+  "bin": {
+    "helper": "dist/index.js"
+  },
+  "scripts": {
+    "build": "node config/build.js",
+    "build:tsc": "tsc && npm link",
+    "dev": "node config/dev.js",
+    "lint": "eslint --ext .js .",
+    "lint:fix": "eslint --fix --ext .js ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@code.byted.org:gehongtao.1/create-app-node.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "@colors/colors": "^1.6.0",
+    "@inquirer/prompts": "^3.0.3",
+    "@types/node": "^20.4.9",
+    "@types/shelljs": "^0.8.12",
+    "@typescript-eslint/eslint-plugin": "^6.3.0",
+    "@typescript-eslint/parser": "^6.3.0",
+    "esbuild": "^0.19.0",
+    "esbuild-plugin-tsc": "^0.3.1",
+    "eslint": "^8.46.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "ora": "^7.0.1",
+    "prettier": "^3.0.1",
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.22.10",
+    "shelljs": "^0.8.5"
+  }
+}
