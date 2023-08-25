@@ -1,7 +1,7 @@
-import parser from '@babel/parser';
+import { parse } from '@babel/parser';
 
-const codeToAst = (code: string) => {
-  return parser.parse(code, {
+export const codeToAst = (code: string) => {
+  return parse(code, {
     sourceType: 'module',
     plugins: [
       'jsx',
@@ -28,10 +28,7 @@ const codeToAst = (code: string) => {
       ['pipelineOperator', { proposal: 'minimal' }],
       'throwExpressions',
       'topLevelAwait',
+      /*  'estree', */
     ],
   });
-};
-
-module.exports = {
-  codeToAst,
 };
