@@ -4,7 +4,7 @@ import { codeToAst } from './ast';
 import { getAllFilePaths } from './file';
 import traverse from '@babel/traverse';
 import generator from '@babel/generator';
-/* import escodegen from 'escodegen' */
+import { importSpecifier, identifier, jsxIdentifier, importDeclaration, stringLiteral } from '@babel/types';
 import fs from 'fs';
 
 const logger = (content: string) => {
@@ -17,7 +17,6 @@ const svgFileTOCamelCase = (value: string) => {
   const parsedValue = value.replace('.svg', '').replace(test, (_, letter) => {
     return letter.toUpperCase();
   });
-
   return parsedValue[0].toUpperCase() + parsedValue.slice(1);
 };
 
@@ -45,6 +44,7 @@ const handleSvgFiles = (svgFiles: string[]) => {
     const indexFilePath = dir + '/index.ts';
     const hasIndex = fs.existsSync(indexFilePath);
     if (hasIndex) {
+      // 文件夹中已经有index.ts
       const existedIndex = fs.readFileSync(indexFilePath).toString();
       const reg = /([\w_-])+.svg/g;
       const importedSet = new Set<string>();
@@ -64,15 +64,15 @@ const handleSvgFiles = (svgFiles: string[]) => {
 type DirFilsMap = Record<string, string[]>;
 const handlerAst = (ast: any) => {
   const transferMap: Record<string, string> = {};
-  const importList: string[] = [];
   const dirFilesMap: DirFilsMap = {};
+  // 提取出使用react component引入的组件，并删除掉对应的引入
   traverse(ast, {
     ImportDeclaration(path) {
       const {
         specifiers: [importSpecifier],
         source: { value },
       } = path.node;
-      if (value.endsWith('.svg') && importSpecifier.imported.name === 'ReactComponent') {
+      if (value.endsWith('.svg') && importSpecifier.imported?.name === 'ReactComponent') {
         const [dirName, svgName] = splitFileName(value);
         const camelSvgName = svgFileTOCamelCase(svgName);
         const importedComponentName = importSpecifier.local.name;
@@ -82,42 +82,70 @@ const handlerAst = (ast: any) => {
         } else {
           dirFilesMap[dirName] = [camelSvgName];
         }
-        importList.push(value);
+
         path.remove();
       }
     },
   });
+
   traverse(ast, {
-    ImportDeclaration(path, scope) {
+    ImportDeclaration(path) {
       const {
-        specifiers: [importSpecifier],
+        specifiers,
         source: { value },
       } = path.node;
-      /* if (value.endsWith('style')) {
-        console.log('scope', scope);
-        logger(JSON.stringify(scope));
-      } */
+      const svgComponents = dirFilesMap[value];
+      if (svgComponents) {
+        // 已经有来自同一个文件夹的引入，写入新的specifiers
+        svgComponents.forEach((item) => {
+          const specifier = importSpecifier(identifier(item), identifier(item));
+          specifiers.push(specifier);
+          delete dirFilesMap[value];
+        });
+      }
+    },
+    JSXElement(path) {
+      const { openingElement, closingElement } = path.node;
+      const JSXName = openingElement.name.name;
+      if (transferMap[JSXName]) {
+        const newJSXName = jsxIdentifier(transferMap[JSXName]);
+        openingElement.name = newJSXName;
+        if (closingElement) {
+          closingElement.name = newJSXName;
+        }
+      }
     },
   });
-  console.log('importList', importList, 'dirFilesMap', dirFilesMap);
+  traverse(ast, {
+    Program(path) {
+      const imports = Object.entries(dirFilesMap).map(([key, value]) => {
+        const specifiers = value.map((item) => {
+          return importSpecifier(identifier(item), identifier(item));
+        });
+        const source = stringLiteral(key);
+        return importDeclaration(specifiers, source);
+      });
+      path.unshiftContainer('body', imports);
+    },
+  });
 };
 
 const handleTsxFiles = (tsxFiles: string[]) => {
-  tsxFiles.forEach((tsxFile, index) => {
+  tsxFiles.forEach((tsxFile) => {
     const file = fs.readFileSync(tsxFile).toString();
 
     const ast = codeToAst(file);
 
     handlerAst(ast);
-    const code = generator(ast, { retainLines: true });
-    logger(code.code);
+    const { code } = generator(ast, { retainLines: true });
+    fs.writeFileSync(tsxFile, code);
   });
 };
 
 const main = () => {
   fs.writeFileSync('src/logger.txt', '');
 
-  const files = getAllFilePaths('srcTest/pages/Purchase');
+  const files = getAllFilePaths('src');
   const svgFiles = files.filter((file) => file.endsWith('.svg'));
   const tsxFiles = files.filter((file) => file.endsWith('.tsx'));
 
