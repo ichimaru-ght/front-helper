@@ -1,10 +1,10 @@
-This is a node cli . To install, run
+This is a front end helper, to install run
 ```
-npm install -g create-app-node
+npm install -g front-helper
 ```
 
-To start cli , run
+To use svg tidy， run
 
 ```
-create-app-node
+helper svg --path <root path (default to src)>
 ```
