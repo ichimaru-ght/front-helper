@@ -1,4 +1,8 @@
-import { parse } from '@babel/parser';
+import { parse, ParseResult } from '@babel/parser';
+import Progress from 'progress';
+import colors from '@colors/colors';
+import generator from '@babel/generator';
+import fs from 'fs';
 
 export const codeToAst = (code: string) => {
   return parse(code, {
@@ -30,5 +34,22 @@ export const codeToAst = (code: string) => {
       'topLevelAwait',
       /*  'estree', */
     ],
+  });
+};
+
+export const handleTsxFilesByAst = (files: string[], fileHandler: (ast: Partial<ParseResult<File>>) => void) => {
+  const bar = new Progress(colors.yellow('正在处理tsx文件 [:bar] :current/:total :percent'), {
+    complete: '+',
+    incomplete: '.',
+    width: 20,
+    total: files.length,
+  });
+  files.forEach((tsxFile) => {
+    const file = fs.readFileSync(tsxFile).toString();
+    const ast = codeToAst(file);
+    fileHandler(ast);
+    const { code } = generator(ast, { retainLines: true });
+    fs.writeFileSync(tsxFile, code);
+    bar.tick(1);
   });
 };

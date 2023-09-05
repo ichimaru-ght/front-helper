@@ -15,9 +15,6 @@ const walkSync = (currentDirPath: string, callback: (filePath: string, dirent: s
 export const getAllFilePaths = (startPath: string) => {
   const paths: string[] = [];
   walkSync(startPath, function (filePath) {
-    /*  if (filePath.endsWith('.tsx')) {
-      paths.push(filePath);
-    } */
     paths.push(filePath);
   });
   return paths;

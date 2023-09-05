@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import removeUnusedImport from './removeUnusedImport';
 import svgRestrain from './svgRestrain';
 import { program } from 'commander';
 
@@ -10,6 +11,13 @@ const main = () => {
     .action(function (res) {
       const { path } = program.opts();
       svgRestrain(path);
+    });
+  program
+    .command('importRemove')
+    .description('remove unused import declaration')
+    .action(function (res) {
+      const { path } = program.opts();
+      removeUnusedImport(path);
     });
   program.parse(process.argv);
 };

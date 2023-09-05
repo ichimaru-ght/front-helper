@@ -1,11 +1,10 @@
-import { codeToAst } from './ast';
-import { getAllFilePaths } from './file';
 import traverse from '@babel/traverse';
 import generator from '@babel/generator';
 import { importSpecifier, identifier, jsxIdentifier, importDeclaration, stringLiteral } from '@babel/types';
 import fs from 'fs';
 import colors from '@colors/colors';
 import Progress from 'progress';
+import { codeToAst, getAllFilePaths } from '../utils';
 
 const svgFileTOCamelCase = (value: string) => {
   const test = /[_-](\w)/g;
