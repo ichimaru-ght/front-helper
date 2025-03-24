@@ -6,7 +6,6 @@ const settings = {
   entryPoints: ['src/index.ts'],
   outfile: 'dist/index.js',
   bundle: true,
-  /*   external: ['shelljs'], */
   platform: 'node',
   plugins: [
     esbuildPluginTsc({
