@@ -18,7 +18,7 @@ const settings = {
   entryPoints: ['src/index.ts'],
   outfile: 'dist/index.js',
   bundle: true,
-  /*   external: ['shelljs'], */
+  external: ['sharp'],
   platform: 'node',
   plugins: [
     esbuildPluginTsc({
