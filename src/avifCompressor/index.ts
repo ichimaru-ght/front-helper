@@ -47,22 +47,26 @@ const splitFileName = (value: string) => {
 const handlerAst = (ast: any) => {
   const allPngList: string[] = [];
   const allAvifSet: Set<string> = new Set();
+  const fileMap: Record<string, string> = {};
 
   let lastImport: any;
   let hasfillComponent = false;
   traverse(ast, {
     ImportDeclaration(path) {
       const {
-        specifiers: [importSpecifier],
+        specifiers = [],
         source: { value },
       } = path.node;
       lastImport = path;
-      if (importSpecifier.local.name === runtimeConfig.fillComponent.name) hasfillComponent = true;
+      const [importSpecifier] = specifiers;
+      if (specifiers.find((importSpecifier) => importSpecifier?.local.name === runtimeConfig.fillComponent.name))
+        hasfillComponent = true;
 
-      if (runtimeConfig.imageTester.test(value)) {
+      if (runtimeConfig.imageTester.test(value) || value.endsWith('.avif')) {
         const [dirName, imageFileName] = splitFileName(value);
-        const [name, type] = imageFileName.split('.');
-        if (type === 'avif') {
+        const name = imageFileName.replace(runtimeConfig.imageTester, '').replace('.avif', '');
+        fileMap[name] = importSpecifier?.local.name;
+        if (imageFileName.endsWith('.avif')) {
           allAvifSet.add(name);
         } else {
           allPngList.push(name);
@@ -71,16 +75,16 @@ const handlerAst = (ast: any) => {
     },
   });
 
-  const needAddList: string[] = allPngList.filter((item) => !allAvifSet.has(item));
-  const needAddSet = new Set(needAddList);
-  needAddList.forEach((item) => needCompressSet.add(item));
+  console.log('allAvifSet', allAvifSet, 'allPngList', allPngList);
 
-  console.log('ndee', needAddList);
+  const needAddList: string[] = allPngList.filter((item) => !allAvifSet.has(item));
+  const needAddImportNameSet = new Set(needAddList.map((item) => fileMap[item]).filter(Boolean));
+  needAddList.forEach((item) => needCompressSet.add(item));
 
   const processedImports = new WeakSet();
 
   if (!needAddList.length) {
-    return;
+    return false;
   }
 
   !hasfillComponent &&
@@ -107,10 +111,10 @@ const handlerAst = (ast: any) => {
       } = path.node;
       if (runtimeConfig.imageTester.test(value)) {
         const [dirName, imageFileName] = splitFileName(value);
-        const [name, type] = imageFileName.split('.');
+        const name = imageFileName.replace(runtimeConfig.imageTester, '');
         if (needCompressSet.has(name)) {
           const newImport = importDeclaration(
-            [importDefaultSpecifier(identifier(`${name}Avif`))],
+            [importDefaultSpecifier(identifier(`${importSpecifier?.local.name}Avif`))],
             stringLiteral(dirName + '/' + imageFileName.replace(runtimeConfig.imageTester, '.avif')),
           );
           path.insertAfter(newImport);
@@ -122,7 +126,7 @@ const handlerAst = (ast: any) => {
       const { openingElement, closingElement } = path.node;
       if (openingElement.name?.name === 'img') {
         const srcAttribute = openingElement.attributes.find((attr) => {
-          return attr.name.name === 'src' && needAddSet.has(attr.value.expression.name);
+          return attr.name.name === 'src' && needAddImportNameSet.has(attr.value.expression.name);
         });
         if (srcAttribute) {
           openingElement.attributes.push(
@@ -132,6 +136,7 @@ const handlerAst = (ast: any) => {
             ),
           );
           openingElement.name = jsxIdentifier(runtimeConfig.fillComponent.name);
+          console.log(openingElement.name);
           if (closingElement) {
             closingElement.name = jsxIdentifier(runtimeConfig.fillComponent.name);
           }
@@ -139,6 +144,7 @@ const handlerAst = (ast: any) => {
       }
     },
   });
+  return true;
 };
 
 const handleTsxFiles = (tsxFiles: string[]) => {
@@ -150,15 +156,20 @@ const handleTsxFiles = (tsxFiles: string[]) => {
   });
   tsxFiles.forEach((tsxFile) => {
     const file = fs.readFileSync(tsxFile).toString();
+    console.log('tsxFile', tsxFile);
     const ast = codeToAst(file);
-    handlerAst(ast);
-    const { code } = generator(ast, { retainLines: true });
-    fs.writeFileSync(tsxFile, code);
+    const changed = handlerAst(ast);
+    console.log('changed', changed);
+    if (changed) {
+      const { code } = generator(ast, { retainLines: true });
+      fs.writeFileSync(tsxFile, code);
+    }
     bar.tick(1);
   });
 };
 
 const handlePicFiles = async (picFiles: string[]) => {
+  console.log('needCompressSet', needCompressSet);
   // 这里使用全局sharp
   const globalSharpPath = require('child_process').execSync('npm root -g').toString().trim();
   const sharp = require(path.join(globalSharpPath, 'sharp'));
@@ -171,7 +182,7 @@ const handlePicFiles = async (picFiles: string[]) => {
   });
   for (const pic of picFiles) {
     const [dirName, imageFileName] = splitFileName(pic);
-    const [name, type] = imageFileName.split('.');
+    const name = imageFileName.replace(runtimeConfig.imageTester, '');
 
     // set优先级比all高
     const needHandle = runtimeConfig.forceNeedHandleSet
@@ -179,7 +190,7 @@ const handlePicFiles = async (picFiles: string[]) => {
       : needCompressSet.has(name) || runtimeConfig.handleAllPic;
 
     if (needHandle) {
-      await sharp(pic).avif({ quality: 90 }).toFile(pic.replace('.png', '.avif'));
+      await sharp(pic).avif({ quality: 90 }).toFile(pic.replace(runtimeConfig.imageTester, '.avif'));
     }
     bar.tick(1);
   }
@@ -189,14 +200,14 @@ const avifCompressor = () => {
   console.log(colors.blue(`开始加载配置文件`));
   const path = require('path');
 
-  const configPath = path.join(process.cwd(), 'avifCompressorConfig.js');
+  const configPath = path.join(process.cwd(), 'avif-compressor.config.js');
   const config = require(configPath);
 
   console.log(colors.blue(`配置文件加载完毕`));
   const { imageConfig, tsxConfig } = config;
 
   if (tsxConfig) {
-    runtimeConfig.fillComponent = tsxConfig.fillComponent;
+    tsxConfig.fillComponent && (runtimeConfig.fillComponent = tsxConfig.fillComponent);
     const files = getAllFilePaths(tsxConfig.path || 'src');
     const tsxFiles = files.filter((file) => file.endsWith('.tsx'));
     handleTsxFiles(tsxFiles);
