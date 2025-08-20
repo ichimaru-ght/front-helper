@@ -37,7 +37,10 @@ export const codeToAst = (code: string) => {
   });
 };
 
-export const handleTsxFilesByAst = (files: string[], fileHandler: (ast: Partial<ParseResult<File>>) => void) => {
+export const handleTsxFilesByAst = (
+  files: string[],
+  fileHandler: (ast: Partial<ParseResult<File>>, filePath: string) => void,
+) => {
   const bar = new Progress(colors.yellow('正在处理tsx文件 [:bar] :current/:total :percent'), {
     complete: '+',
     incomplete: '.',
@@ -47,8 +50,23 @@ export const handleTsxFilesByAst = (files: string[], fileHandler: (ast: Partial<
   files.forEach((tsxFile) => {
     const file = fs.readFileSync(tsxFile).toString();
     const ast = codeToAst(file);
-    fileHandler(ast);
+    fileHandler(ast, tsxFile);
     const { code } = generator(ast, { retainLines: true });
+    fs.writeFileSync(tsxFile, code);
+    bar.tick(1);
+  });
+};
+
+export const handleTsxFilesByCode = (files: string[], fileHandler: (ast: string) => string) => {
+  const bar = new Progress(colors.yellow('正在处理tsx文件 [:bar] :current/:total :percent'), {
+    complete: '+',
+    incomplete: '.',
+    width: 20,
+    total: files.length,
+  });
+  files.forEach((tsxFile) => {
+    const file = fs.readFileSync(tsxFile).toString();
+    const code = fileHandler(file);
     fs.writeFileSync(tsxFile, code);
     bar.tick(1);
   });

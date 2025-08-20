@@ -25,7 +25,9 @@ const runtimeConfig: {
     path: string;
     exportType: 'const' | 'default';
   };
+  debug: boolean;
 } = {
+  debug: false,
   handleAllPic: false,
   imageTester: /\.(png|jpg|jpeg)$/i,
   fillComponent: {
@@ -37,7 +39,7 @@ const runtimeConfig: {
 
 const needCompressSet = new Set<string>();
 
-const splitFileName = (value: string) => {
+export const splitFileName = (value: string) => {
   const pathArr = value.split('/');
   const fileName = pathArr.pop() || '';
   const dirName = pathArr.join('/');
@@ -74,8 +76,6 @@ const handlerAst = (ast: any) => {
       }
     },
   });
-
-  console.log('allAvifSet', allAvifSet, 'allPngList', allPngList);
 
   const needAddList: string[] = allPngList.filter((item) => !allAvifSet.has(item));
   const needAddImportNameSet = new Set(needAddList.map((item) => fileMap[item]).filter(Boolean));
@@ -136,7 +136,6 @@ const handlerAst = (ast: any) => {
             ),
           );
           openingElement.name = jsxIdentifier(runtimeConfig.fillComponent.name);
-          console.log(openingElement.name);
           if (closingElement) {
             closingElement.name = jsxIdentifier(runtimeConfig.fillComponent.name);
           }
@@ -156,10 +155,10 @@ const handleTsxFiles = (tsxFiles: string[]) => {
   });
   tsxFiles.forEach((tsxFile) => {
     const file = fs.readFileSync(tsxFile).toString();
-    console.log('tsxFile', tsxFile);
+
     const ast = codeToAst(file);
     const changed = handlerAst(ast);
-    console.log('changed', changed);
+
     if (changed) {
       const { code } = generator(ast, { retainLines: true });
       fs.writeFileSync(tsxFile, code);
@@ -169,8 +168,6 @@ const handleTsxFiles = (tsxFiles: string[]) => {
 };
 
 const handlePicFiles = async (picFiles: string[]) => {
-  console.log('needCompressSet', needCompressSet);
-  // 这里使用全局sharp
   const globalSharpPath = require('child_process').execSync('npm root -g').toString().trim();
   const sharp = require(path.join(globalSharpPath, 'sharp'));
 
@@ -201,6 +198,7 @@ const avifCompressor = () => {
   const path = require('path');
 
   const configPath = path.join(process.cwd(), 'avif-compressor.config.js');
+
   const config = require(configPath);
 
   console.log(colors.blue(`配置文件加载完毕`));
