@@ -13,7 +13,6 @@ const getMessageIdAndDefault = (idObj: any): { id: string | null; defaultMessage
     if (propKey === 'id') {
       id = prop.value?.value || null;
     } else if (propKey === 'defaultMessage') {
-      // 新增：处理defaultMessage
       defaultMessage = prop.value?.value || null;
     }
   });
@@ -25,9 +24,9 @@ export const removeIntlDeclaration = (root: Collection) => {
     .find(j.VariableDeclaration, {
       declarations: (declarations: any[]) =>
         declarations.length === 1 &&
-        declarations[0].id?.name === 'intl' && // 变量名为intl
-        declarations[0].init?.type === 'CallExpression' && // 初始化是函数调用
-        declarations[0].init.callee?.name === 'useIntl', // 调用的是useIntl
+        declarations[0].id?.name === 'intl' &&
+        declarations[0].init?.type === 'CallExpression' &&
+        declarations[0].init.callee?.name === 'useIntl',
     })
     .remove();
 };

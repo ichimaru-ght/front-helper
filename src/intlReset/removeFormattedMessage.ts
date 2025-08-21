@@ -13,15 +13,13 @@ const matchFormattedMessage = (node: any): boolean => {
 const getFormattedMessageProps = (node: any) => {
   let id: string | null = null;
   let values: any = null;
-  let defaultMessage: string | null = null; // 新增：提取defaultMessage
-
+  let defaultMessage: string | null = null;
   (node.openingElement.attributes as any[]).forEach((attr) => {
     if (attr.name?.name === 'id' && attr.value?.type === 'StringLiteral') {
       id = attr.value.value;
     } else if (attr.name?.name === 'values') {
       values = attr.value?.expression || attr.value;
     } else if (attr.name?.name === 'defaultMessage' && attr.value?.type === 'StringLiteral') {
-      // 新增：提取defaultMessage属性
       defaultMessage = attr.value.value;
     }
   });
