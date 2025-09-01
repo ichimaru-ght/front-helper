@@ -15,14 +15,14 @@ const handlePicFiles = async (picFiles: string[]) => {
   });
 
   for (const pic of picFiles) {
-    await sharp(pic).avif({ quality: 90 }).toFile(pic.replace('.png', '.avif'));
+    await sharp(pic).avif({ quality: 70 }).toFile(pic.replace('.jpg', '.avif'));
     bar.tick(1);
   }
 };
 
 const pureCompressor = (path: string) => {
   const files = getAllFilePaths(path);
-  const picFiles = files.filter((file) => file.endsWith('.png'));
+  const picFiles = files.filter((file) => file.endsWith('.jpg'));
 
   handlePicFiles(picFiles);
 };

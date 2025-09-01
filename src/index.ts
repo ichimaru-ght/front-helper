@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import avifCompressor from './avifCompressor';
+import imagProcess from './imgProcess';
 import intlReset from './intlReset';
 import pureCompressor from './pureCompressor';
 import removeUnusedImport from './removeUnusedImport';
@@ -45,6 +46,15 @@ const main = () => {
       const { path } = program.opts();
       intlReset(path);
     });
+
+  program
+    .command('pure-img')
+    .description('remove unused import declaration')
+    .action(function (res) {
+      const { path } = program.opts();
+      imagProcess(path);
+    });
+
   program.parse(process.argv);
 };
 
