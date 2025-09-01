@@ -28,7 +28,6 @@ const getFormattedMessageProps = (node: any) => {
 };
 
 export const transformFormattedMessage = (root: Collection, filePath: string) => {
-  // 一次遍历所有FormattedMessage，根据场景动态处理
   root.find(j.JSXElement, matchFormattedMessage).forEach((path) => {
     const parent = path.parent.node;
     const { id, values, defaultMessage } = getFormattedMessageProps(path.node);
@@ -58,7 +57,7 @@ export const transformFormattedMessage = (root: Collection, filePath: string) =>
 
     const parentType = parent.type;
     if (
-      // 变量使用场景：直接替换为模板字符串
+      // 直接替换为模板字符串
       parentType === 'VariableDeclarator' || // 变量赋值
       parentType === 'CallExpression' || // 函数参数
       parentType === 'ConditionalExpression' || // 条件表达式
