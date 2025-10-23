@@ -6,6 +6,7 @@ import pureCompressor from './pureCompressor';
 import removeUnusedImport from './removeUnusedImport';
 import svgRestrain from './svgRestrain';
 import { program } from 'commander';
+import transCollect from './transCollect';
 
 const main = () => {
   program.version('0.0.1').option('-P --path <path>', 'root path', 'src');
@@ -45,6 +46,14 @@ const main = () => {
     .action(function (res) {
       const { path } = program.opts();
       intlReset(path);
+    });
+
+  program
+    .command('transCollect')
+    .description('get translation collect')
+    .action(function (res) {
+      const { path } = program.opts();
+      transCollect(path);
     });
 
   program
