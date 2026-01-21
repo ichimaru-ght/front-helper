@@ -1,5 +1,5 @@
 import colors from '@colors/colors';
-import { codeToAst, getAllFilePaths } from '../utils';
+import { codeToAst, getAllFilePaths } from '../../utils';
 import Progress from 'progress';
 import fs from 'fs';
 import traverse from '@babel/traverse';
@@ -204,22 +204,16 @@ const avifCompressor = () => {
   console.log(colors.blue(`配置文件加载完毕`));
   const { imageConfig, tsxConfig } = config;
 
-  if (tsxConfig) {
-    tsxConfig.fillComponent && (runtimeConfig.fillComponent = tsxConfig.fillComponent);
-    const files = getAllFilePaths(tsxConfig.path || 'src');
-    const tsxFiles = files.filter((file) => file.endsWith('.tsx'));
-    handleTsxFiles(tsxFiles);
-  }
+  const files = getAllFilePaths(tsxConfig.path || 'src');
+  const tsxFiles = files.filter((file) => file.endsWith('.tsx'));
+  handleTsxFiles(tsxFiles);
 
-  if (imageConfig) {
-    runtimeConfig.handleAllPic = imageConfig.handleAll;
-    runtimeConfig.imageTester = imageConfig.test;
-    if (imageConfig.specificPaths) {
-      runtimeConfig.forceNeedHandleSet = new Set(imageConfig.specificPaths);
-    }
-    const files = getAllFilePaths(imageConfig.path || 'src');
-    const picFiles = files.filter((file) => runtimeConfig.imageTester.test(file));
-    handlePicFiles(picFiles);
+  runtimeConfig.imageTester = imageConfig.test;
+  if (imageConfig.specificPaths) {
+    runtimeConfig.forceNeedHandleSet = new Set(imageConfig.specificPaths);
   }
+  const picFilesOrigin = getAllFilePaths(imageConfig.path || 'src');
+  const picFiles = picFilesOrigin.filter((file) => runtimeConfig.imageTester.test(file));
+  handlePicFiles(picFiles);
 };
 export default avifCompressor;

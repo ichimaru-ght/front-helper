@@ -15,7 +15,7 @@ export const codeToAst = (code: string) => {
       'classProperties',
       'classPrivateProperties',
       'classPrivateMethods',
-      ['decorators', { decoratorsBeforeExport: false }],
+      ['decorators', { decoratorsBeforeExport: true }],
       'doExpressions',
       'dynamicImport',
       'exportDefaultFrom',
@@ -40,6 +40,7 @@ export const codeToAst = (code: string) => {
 export const handleTsxFilesByAst = (
   files: string[],
   fileHandler: (ast: Partial<ParseResult<File>>, filePath: string) => void,
+  noWrite?: boolean,
 ) => {
   const bar = new Progress(colors.yellow('正在处理tsx文件 [:bar] :current/:total :percent'), {
     complete: '+',
@@ -51,8 +52,10 @@ export const handleTsxFilesByAst = (
     const file = fs.readFileSync(tsxFile).toString();
     const ast = codeToAst(file);
     fileHandler(ast, tsxFile);
-    const { code } = generator(ast, { retainLines: true });
-    fs.writeFileSync(tsxFile, code);
+    if (!noWrite) {
+      const { code } = generator(ast, { retainLines: true });
+      fs.writeFileSync(tsxFile, code);
+    }
     bar.tick(1);
   });
 };

@@ -114,7 +114,8 @@ const handlePicFiles = async (picFiles: string[]) => {
 
 const imagProcess = (path: string) => {
   const files = getAllFilePaths(path);
-  const picFiles = files.filter((file) => file.endsWith('.jpg'));
+  const picFiles = files.filter((file) => file.endsWith('.jpg') || file.endsWith('.png') || file.endsWith('.jpeg'));
+  console.log('picFiles', picFiles);
   const filtedFiles = picFiles.filter((file) => file.indexOf('Cmp') === -1);
 
   handlePicFiles(filtedFiles);

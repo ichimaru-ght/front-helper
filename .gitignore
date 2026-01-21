@@ -36,3 +36,4 @@ release
 dist
 monitor/
 srcTest/
+.trae/agent-project-config.json
