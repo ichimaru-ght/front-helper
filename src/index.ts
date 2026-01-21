@@ -8,6 +8,7 @@ import { program } from 'commander';
 import transCollect from './transCollect';
 import iconRefCleaner from './iconRefCleaner';
 import staticStarlingFind from './apps/staticStarlingFind';
+import intlReset from './apps/intlReset';
 
 const main = () => {
   program.version('0.0.1').option('-P --path <path>', 'root path', 'src');
@@ -34,14 +35,14 @@ const main = () => {
       pureCompressor(path);
     });
 
-  /*   program
+  program
     .command('intlReset')
     .description('remove unused import declaration')
     .action(function (res) {
       const { path } = program.opts();
       intlReset(path);
     });
- */
+
   program
     .command('transCollect')
     .description('get translation collect')

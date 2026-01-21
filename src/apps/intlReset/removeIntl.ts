@@ -1,5 +1,5 @@
 import j, { Collection } from 'jscodeshift';
-import { buildTemplateLiteral, getParamMap } from './utils';
+import { getParamMap } from './utils';
 import { messages } from '.';
 
 const getMessageIdAndDefault = (idObj: any): { id: string | null; defaultMessage: string | null } => {
@@ -17,6 +17,14 @@ const getMessageIdAndDefault = (idObj: any): { id: string | null; defaultMessage
     }
   });
   return { id, defaultMessage };
+};
+
+const buildTCall = (messageId: string, paramsObj: any, defaultValue: string) => {
+  const paramMap = getParamMap(paramsObj);
+  delete (paramMap as any).defaultValue;
+  const properties = Object.entries(paramMap).map(([key, value]) => j.property('init', j.identifier(key), value));
+  properties.push(j.property('init', j.identifier('defaultValue'), j.stringLiteral(defaultValue)));
+  return j.callExpression(j.identifier('t'), [j.stringLiteral(messageId), j.objectExpression(properties)]);
 };
 
 export const removeIntlDeclaration = (root: Collection) => {
@@ -50,16 +58,7 @@ export const transformIntlMessages = (root: Collection, filePath: string) => {
       console.error(`[intl 调用] 无id`, filePath);
       return path.node;
     }
-    const messageTemplate = messages[messageId] || defaultMessage;
-
-    if (!messageTemplate) {
-      // 跳过无 id 或无模板的情况
-      console.error(`[intl 调用] 无匹配模板（id: ${messageId || '未知'}）`, filePath);
-      return path.node;
-    }
-
-    const paramMap = getParamMap(paramsObj);
-
-    return buildTemplateLiteral(messageTemplate, paramMap);
+    const defaultValue = messages[messageId] || messageId;
+    return buildTCall(messageId, paramsObj, defaultMessage || defaultValue);
   });
 };
