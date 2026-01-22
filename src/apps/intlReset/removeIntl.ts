@@ -55,7 +55,6 @@ export const transformIntlMessages = (root: Collection, filePath: string) => {
     const [idObj, paramsObj] = path.node.arguments;
     const { id: messageId, defaultMessage } = getMessageIdAndDefault(idObj);
     if (!messageId) {
-      console.error(`[intl 调用] 无id`, filePath);
       return path.node;
     }
     const defaultValue = messages[messageId] || messageId;
