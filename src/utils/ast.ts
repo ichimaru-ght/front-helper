@@ -32,11 +32,13 @@ export const codeToAst = (code: string) => {
       ['pipelineOperator', { proposal: 'minimal' }],
       'throwExpressions',
       'topLevelAwait',
-      /*  'estree', */
     ],
   });
 };
 
+/**
+ * 使用babel处理ast文件
+ */
 export const handleTsxFilesByAst = (
   files: string[],
   fileHandler: (ast: Partial<ParseResult<File>>, filePath: string) => void,
@@ -63,6 +65,9 @@ export const handleTsxFilesByAst = (
   });
 };
 
+/**
+ * 使用jscodeshift处理ast文件
+ */
 export const handleTsxFilesByRoot = (
   files: string[],
   fileHandler: (root: ReturnType<typeof j>, filePath: string) => void,
@@ -80,7 +85,7 @@ export const handleTsxFilesByRoot = (
     const root = jtsx(file);
     fileHandler(root as any, tsxFile);
     if (!noWrite) {
-      const code = root.toSource({ reuseWhitespace: true, wrapColumn: 200 });
+      const code = root.toSource({ reuseWhitespace: true, wrapColumn: 200, quote: 'single' });
       if (code !== file) {
         fs.writeFileSync(tsxFile, code);
       }
@@ -89,6 +94,9 @@ export const handleTsxFilesByRoot = (
   });
 };
 
+/**
+ * 使用代码字符串处理文件
+ */
 export const handleTsxFilesByCode = (files: string[], fileHandler: (ast: string) => string) => {
   const bar = new Progress(colors.yellow('正在处理tsx文件 [:bar] :current/:total :percent'), {
     complete: '+',

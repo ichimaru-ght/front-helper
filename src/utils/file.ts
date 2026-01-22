@@ -13,6 +13,11 @@ const walkSync = (currentDirPath: string, callback: (filePath: string, dirent: s
   });
 };
 
+/**
+ * 递归获取目录下所有文件路径
+ * @param startPath 目录路径
+ * @returns 文件路径数组
+ */
 export const getAllFilePaths = (startPath: string) => {
   const paths: string[] = [];
   walkSync(startPath, function (filePath) {

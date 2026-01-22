@@ -1,38 +1,19 @@
 #!/usr/bin/env node
-import avifCompressor from './apps/avifCompressor';
-import imagProcess from './imgProcess';
-/* import intlReset from './intlReset';
- */ import pureCompressor from './pureCompressor';
-import svgRestrain from './svgRestrain';
+import svgRestrain from './apps/svgRestrain';
 import { program } from 'commander';
-import transCollect from './transCollect';
-import iconRefCleaner from './iconRefCleaner';
 import staticStarlingFind from './apps/staticStarlingFind';
 import intlReset from './apps/intlReset';
+import webpCompress from './apps/webpCompress';
 
 const main = () => {
   program.version('0.0.1').option('-P --path <path>', 'root path', 'src');
+
   program
     .command('svg')
     .description('run svg tide up')
     .action(function (res) {
       const { path } = program.opts();
       svgRestrain(path);
-    });
-
-  program
-    .command('avif')
-    .description('remove unused import declaration')
-    .action(function (res) {
-      avifCompressor();
-    });
-
-  program
-    .command('pure-avif')
-    .description('remove unused import declaration')
-    .action(function (res) {
-      const { path } = program.opts();
-      pureCompressor(path);
     });
 
   program
@@ -44,19 +25,11 @@ const main = () => {
     });
 
   program
-    .command('transCollect')
-    .description('get translation collect')
-    .action(function (res) {
-      const { path } = program.opts();
-      transCollect(path);
-    });
-
-  program
-    .command('pure-img')
+    .command('webp-compress')
     .description('remove unused import declaration')
     .action(function (res) {
       const { path } = program.opts();
-      imagProcess(path);
+      webpCompress(path);
     });
 
   program

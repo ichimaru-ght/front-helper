@@ -4,7 +4,7 @@ import { importSpecifier, identifier, jsxIdentifier, importDeclaration, stringLi
 import fs from 'fs';
 import colors from '@colors/colors';
 import Progress from 'progress';
-import { codeToAst, getAllFilePaths } from '../utils';
+import { codeToAst, getAllFilePaths } from '../../utils';
 
 const svgFileTOCamelCase = (value: string) => {
   const test = /[_-](\w)/g;
@@ -142,6 +142,7 @@ const handleTsxFiles = (tsxFiles: string[]) => {
   });
 };
 
+/** 处理svg导出，修改成从根路径的index导出React组件 */
 const svgRestrain = (path: string) => {
   console.log(colors.blue(`开始扫描文件 /${path}`));
   const files = getAllFilePaths(path);

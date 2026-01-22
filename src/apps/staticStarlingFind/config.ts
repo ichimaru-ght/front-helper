@@ -1,4 +1,4 @@
-import { CommonConfig, FilePathInfo } from '../../typings';
+import { CommonConfig } from '../../typings';
 
 export const config: CommonConfig = {
   defaultSrc: 'src',

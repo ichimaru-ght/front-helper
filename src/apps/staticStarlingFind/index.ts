@@ -23,6 +23,7 @@ const processFile = (ast: any, filePath: string) => {
   });
 };
 
+/** 用来扫描有没有不是写在函数内的，静态声明的i18n调用 */
 const tool = (path: string) => {
   const finalPath = path || config.defaultSrc;
   if (!finalPath) {

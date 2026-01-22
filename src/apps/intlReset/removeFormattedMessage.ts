@@ -12,11 +12,30 @@ const matchFormattedMessage = (node: any): boolean => {
 
 const getFormattedMessageProps = (node: any) => {
   let id: string | null = null;
+  let idNode: any = null;
   let values: any = null;
   let defaultMessage: string | null = null;
+  let fallbackString: string | null = null;
   (node.openingElement.attributes as any[]).forEach((attr) => {
-    if (attr.name?.name === 'id' && attr.value?.type === 'StringLiteral') {
-      id = attr.value.value;
+    if (attr.name?.name === 'id') {
+      const v = attr.value;
+      if (v?.type === 'StringLiteral') {
+        id = v.value;
+        idNode = j.literal(v.value);
+      } else if (v?.type === 'JSXExpressionContainer') {
+        const expr = v.expression;
+        if (expr?.type === 'StringLiteral') {
+          id = expr.value;
+          idNode = expr;
+        } else if (expr?.type === 'LogicalExpression' && expr.operator === '||') {
+          idNode = expr.left;
+          if (expr.right?.type === 'StringLiteral') {
+            fallbackString = expr.right.value;
+          }
+        } else {
+          idNode = expr;
+        }
+      }
     } else if (attr.name?.name === 'values') {
       values = attr.value?.expression || attr.value;
     } else if (attr.name?.name === 'defaultMessage' && attr.value?.type === 'StringLiteral') {
@@ -24,28 +43,30 @@ const getFormattedMessageProps = (node: any) => {
     }
   });
 
-  return { id, values, defaultMessage };
+  return { id, idNode, values, defaultMessage, fallbackString };
 };
 
-const buildI18nTCall = (id: string, valuesExpr: any) => {
+const buildI18nTCall = (idOrNull: string | null, idNode: any, valuesExpr: any, defaultMessage: string | null, fallbackString: string | null) => {
   const paramMap = getParamMap(valuesExpr);
   delete (paramMap as any).defaultValue;
   const properties = Object.entries(paramMap).map(([key, value]) => j.property('init', j.identifier(key), value));
-  const defaultValue = messages[id] || id;
+  const defaultValue =
+    (idOrNull ? messages[idOrNull] : null) ||
+    (idOrNull ? idOrNull : null) ||
+    defaultMessage ||
+    fallbackString ||
+    '';
   properties.push(j.property('init', j.identifier('defaultValue'), j.stringLiteral(defaultValue)));
   const options = j.objectExpression(properties);
-  return j.callExpression(j.memberExpression(j.identifier('I18n'), j.identifier('t')), [j.stringLiteral(id), options]);
+  const idArg = idNode || (idOrNull ? j.literal(idOrNull) : j.literal(''));
+  return j.callExpression(j.memberExpression(j.identifier('I18n'), j.identifier('t')), [idArg, options]);
 };
 
 export const transformFormattedMessage = (root: Collection, filePath: string) => {
   root.find(j.JSXElement, matchFormattedMessage).forEach((path) => {
     const parent = path.parent.node;
-    const { id, values } = getFormattedMessageProps(path.node);
-    if (!id) {
-      console.log(`[FormatedMessage] 无id`, filePath);
-      return;
-    }
-    const callExpr = buildI18nTCall(id, values);
+    const { id, idNode, values, defaultMessage, fallbackString } = getFormattedMessageProps(path.node);
+    const callExpr = buildI18nTCall(id, idNode, values, defaultMessage, fallbackString);
 
     const parentType = parent.type;
     if (
