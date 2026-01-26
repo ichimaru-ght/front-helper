@@ -1,6 +1,6 @@
 {
   "name": "front-helper",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "一个前端小工具",
   "main": "dist/index.js",
   "keywords": [

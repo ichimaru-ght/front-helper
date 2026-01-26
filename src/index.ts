@@ -2,7 +2,7 @@
 import svgRestrain from './apps/svgRestrain';
 import { program } from 'commander';
 import staticStarlingFind from './apps/staticStarlingFind';
-import intlReset from './apps/intlReset';
+import intlReset from './apps/intlTidy';
 import webpCompress from './apps/webpCompress';
 
 const main = () => {
