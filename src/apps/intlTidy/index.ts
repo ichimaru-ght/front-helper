@@ -1,30 +1,29 @@
-import { removeIntlDeclaration, transformIntlMessages } from './removeIntl';
-import { transformFormattedMessage } from './removeFormattedMessage';
-import { removeAllReactIntlImports } from './removeImport';
-import { replaceUseIntlHook } from './removeHookCall';
-import { getAllFilePaths, handleTsxFilesByRoot } from '../../utils';
+import { getAllFilePaths, handleTsxFilesByRoot, logger } from '../../utils';
 import { config } from './config';
-import { exportExcel } from './exportExcel';
+import { handleContextReplace } from './contextReplace';
+import { handleIntlCode } from './intlReplace';
+import { flattenLanguageJson } from './utils';
+
+import { exportExcel } from './utils/exportExcel';
 
 export let messages: Record<string, string> = {};
 
-const handleCode = (root: any, filePath: string) => {
-  transformIntlMessages(root, filePath);
-  transformFormattedMessage(root, filePath);
-  replaceUseIntlHook(root);
-  removeIntlDeclaration(root);
-  removeAllReactIntlImports(root);
-};
-
-const intlReset = (path = 'src') => {
+const intlReset = (mode = 'context', path = 'src') => {
   const filePaths = getAllFilePaths(path);
   const tsxFiles = filePaths.filter((file) => file.endsWith('.tsx'));
 
-  const jsonList = config.languageJsonList.reverse();
-  const mergedMessages = jsonList.reduce((prev, cur) => ({ ...prev, ...require(cur.jsonPath) }), {});
+  const jsonList = config.languageJsonList;
+  const mergedMessages = [...jsonList].reverse().reduce((prev, cur) => {
+    const raw = require(cur.jsonPath);
+    const json = raw?.default || raw;
+    return { ...prev, ...flattenLanguageJson(json) };
+  }, {});
+
+  logger(JSON.stringify(mergedMessages));
 
   messages = mergedMessages;
-  handleTsxFilesByRoot(tsxFiles, handleCode);
+  const handler = mode === 'intl' ? handleIntlCode : handleContextReplace;
+  handleTsxFilesByRoot(tsxFiles, handler);
   exportExcel(mergedMessages, jsonList);
 };
 

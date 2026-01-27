@@ -20,8 +20,8 @@ const main = () => {
     .command('intlReset')
     .description('remove unused import declaration')
     .action(function (res) {
-      const { path } = program.opts();
-      intlReset(path);
+      const { path, mode } = program.opts();
+      intlReset(mode, path);
     });
 
   program

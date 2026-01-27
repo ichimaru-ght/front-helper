@@ -1,7 +1,6 @@
 import j, { Collection } from 'jscodeshift';
-import { messages } from '.';
-import { getParamMap } from './utils';
-import { buildI18nTCall } from './utils/starling';
+import { messages } from '..';
+import { buildI18nTCall } from '../utils/starling';
 
 const matchFormattedMessage = (node: any): boolean => {
   return (
@@ -51,7 +50,9 @@ export const transformFormattedMessage = (root: Collection, filePath: string) =>
   root.find(j.JSXElement, matchFormattedMessage).forEach((path) => {
     const parent = path.parent.node;
     const { id, idNode, values, defaultMessage, fallbackString } = getFormattedMessageProps(path.node);
-    const callExpr = buildI18nTCall(id, idNode, values, defaultMessage, fallbackString);
+    if (!id) return;
+    const defaultValue = messages[id] || id || defaultMessage || '';
+    const callExpr = buildI18nTCall(id, values, defaultValue);
 
     const parentType = parent.type;
     if (

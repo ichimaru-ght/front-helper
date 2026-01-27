@@ -2,11 +2,15 @@ export const config = {
   languageJsonList: [
     {
       language: 'en',
-      jsonPath: 'src/lang/en.json',
+      jsonPath: '/Users/bytedance/fe-monorepo2/apps/lite-hms-ui/src/context/Language/en.json',
     },
     {
       language: 'id',
-      jsonPath: 'src/lang/id.json',
+      jsonPath: '/Users/bytedance/fe-monorepo2/apps/lite-hms-ui/src/context/Language/id.json',
+    },
+    {
+      language: 'en-GB',
+      jsonPath: '/Users/bytedance/fe-monorepo2/apps/lite-hms-ui/src/context/Language/en-uk.json',
     },
   ],
 };

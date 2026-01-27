@@ -1,4 +1,5 @@
-import { createExcel, appendRows } from '../../utils/excel';
+import { flattenLanguageJson } from '.';
+import { appendRows, createExcel } from '../../../utils/excel';
 
 export type LanguageJsonInfo = {
   language: string;
@@ -12,9 +13,9 @@ const buildRows = (
 ) => {
   const keys = Object.keys(mergedMap).filter(Boolean);
   return keys.map((k) => {
-    let source = sourceMap[k];
+    const source = sourceMap[k] ?? '';
     const others = otherMaps.map(({ map }) => map[k] ?? '');
-    return [k, source ?? mergedMap[k], ...others];
+    return [k, source, ...others];
   });
 };
 
@@ -26,8 +27,8 @@ export const exportExcel = (
 ) => {
   if (!languageJsonList?.length) return;
   const [sourceInfo, ...others] = languageJsonList;
-  const sourceMap = require(sourceInfo.jsonPath);
-  const otherMaps = others.map((item) => ({ lang: item.language, map: require(item.jsonPath) }));
+  const sourceMap = flattenLanguageJson(require(sourceInfo.jsonPath));
+  const otherMaps = others.map((item) => ({ lang: item.language, map: flattenLanguageJson(require(item.jsonPath)) }));
   const columns = ['keys', 'source', ...otherMaps.map((o) => o.lang)];
   createExcel({ columns, outputPath, sheetName });
   const rows = buildRows(mergedMap, sourceMap, otherMaps);

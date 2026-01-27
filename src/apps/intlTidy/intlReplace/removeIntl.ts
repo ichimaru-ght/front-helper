@@ -1,6 +1,6 @@
 import j, { Collection } from 'jscodeshift';
-import { getParamMap } from './utils';
-import { messages } from '.';
+import { getParamMap } from '../utils/ast';
+import { messages } from '..';
 
 const getMessageIdAndDefault = (idObj: any): { id: string | null; defaultMessage: string | null } => {
   if (idObj.type !== 'ObjectExpression') return { id: null, defaultMessage: null };
