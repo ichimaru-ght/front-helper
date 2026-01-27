@@ -1,6 +1,6 @@
 import fs from 'fs';
 
 export const logger = (content: string) => {
-  fs.appendFileSync('src/logger.txt', `\n========= \n`);
-  fs.appendFileSync('src/logger.txt', content);
+  fs.appendFileSync('logger.txt', `\n========= \n`);
+  fs.appendFileSync('logger.txt', content);
 };

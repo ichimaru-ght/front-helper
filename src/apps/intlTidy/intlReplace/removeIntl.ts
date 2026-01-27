@@ -1,6 +1,6 @@
 import j, { Collection } from 'jscodeshift';
-import { getParamMap } from '../utils/ast';
 import { messages } from '..';
+import { buildTCall } from '../utils/starling';
 
 const getMessageIdAndDefault = (idObj: any): { id: string | null; defaultMessage: string | null } => {
   if (idObj.type !== 'ObjectExpression') return { id: null, defaultMessage: null };
@@ -17,14 +17,6 @@ const getMessageIdAndDefault = (idObj: any): { id: string | null; defaultMessage
     }
   });
   return { id, defaultMessage };
-};
-
-const buildTCall = (messageId: string, paramsObj: any, defaultValue: string) => {
-  const paramMap = getParamMap(paramsObj);
-  delete (paramMap as any).defaultValue;
-  const properties = Object.entries(paramMap).map(([key, value]) => j.property('init', j.identifier(key), value));
-  properties.push(j.property('init', j.identifier('defaultValue'), j.stringLiteral(defaultValue)));
-  return j.callExpression(j.identifier('t'), [j.stringLiteral(messageId), j.objectExpression(properties)]);
 };
 
 export const removeIntlDeclaration = (root: Collection) => {

@@ -6,7 +6,10 @@ import intlReset from './apps/intlTidy';
 import webpCompress from './apps/webpCompress';
 
 const main = () => {
-  program.version('0.0.1').option('-P --path <path>', 'root path', 'src');
+  program
+    .version('0.0.1')
+    .option('-P --path <path>', 'root path', 'src')
+    .option('-m --mode <mode>', 'intl or context', 'context');
 
   program
     .command('svg')

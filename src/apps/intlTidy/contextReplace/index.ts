@@ -1,9 +1,10 @@
 import j, { Collection } from 'jscodeshift';
 import { messages } from '..';
-import { getFlattenKey, getPropName, flattenObjectExpressionToProperties } from './utils';
+import { getPropName, flattenObjectExpressionToProperties } from './utils';
 import { collectState } from './collectState';
 import { buildI18nTCall } from '../utils/starling';
 import { replaceUseLanguageIdentifiers } from './removeUseLanguage';
+import { getFlattenKey } from '../utils';
 
 export type UseLanguageState = {
   rootObjectNames: Set<string>;

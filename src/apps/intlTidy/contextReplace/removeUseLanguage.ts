@@ -3,7 +3,7 @@ import j, { Collection } from 'jscodeshift';
 import { UseLanguageState } from '.';
 import { messages } from '..';
 import { buildI18nTCall } from '../utils/starling';
-import { getFlattenKey } from './utils';
+import { getFlattenKey } from '../utils';
 
 const isUseLanguageCallee = (callee: any) => callee?.type === 'Identifier' && callee.name === 'useLanguage';
 

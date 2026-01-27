@@ -7,11 +7,10 @@ export type LanguageJsonInfo = {
 };
 
 const buildRows = (
-  mergedMap: Record<string, string>,
+  keys: string[],
   sourceMap: Record<string, string>,
   otherMaps: { lang: string; map: Record<string, string> }[],
 ) => {
-  const keys = Object.keys(mergedMap).filter(Boolean);
   return keys.map((k) => {
     const source = sourceMap[k] ?? '';
     const others = otherMaps.map(({ map }) => map[k] ?? '');
@@ -20,7 +19,7 @@ const buildRows = (
 };
 
 export const exportExcel = (
-  mergedMap: Record<string, string>,
+  usedKeys: Set<string>,
   languageJsonList: LanguageJsonInfo[],
   outputPath = 'intl-export.xlsx',
   sheetName = 'Sheet1',
@@ -29,8 +28,8 @@ export const exportExcel = (
   const [sourceInfo, ...others] = languageJsonList;
   const sourceMap = flattenLanguageJson(require(sourceInfo.jsonPath));
   const otherMaps = others.map((item) => ({ lang: item.language, map: flattenLanguageJson(require(item.jsonPath)) }));
-  const columns = ['keys', 'source', ...otherMaps.map((o) => o.lang)];
+  const columns = ['keys', sourceInfo.language, ...otherMaps.map((o) => o.lang)];
   createExcel({ columns, outputPath, sheetName });
-  const rows = buildRows(mergedMap, sourceMap, otherMaps);
+  const rows = buildRows(Array.from(usedKeys), sourceMap, otherMaps);
   appendRows({ outputPath, rows, sheetName });
 };

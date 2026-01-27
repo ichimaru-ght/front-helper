@@ -1,6 +1,5 @@
 import j from 'jscodeshift';
-
-export const getFlattenKey = (segments: string[]) => segments.filter(Boolean).join('_');
+import { getFlattenKey } from '../utils';
 
 export const getPropName = (node: any): string | null => {
   if (!node) return null;

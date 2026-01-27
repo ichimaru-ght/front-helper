@@ -1,4 +1,4 @@
-import j from 'jscodeshift';
+import { config } from '..';
 
 export const flattenLanguageJson = (input: any, prefix: string[] = []): Record<string, string> => {
   if (!input || typeof input !== 'object' || Array.isArray(input)) return {};
@@ -16,4 +16,4 @@ export const flattenLanguageJson = (input: any, prefix: string[] = []): Record<s
   return out;
 };
 
-export const getFlattenKey = (segments: string[]) => segments.filter(Boolean).join('_');
+export const getFlattenKey = (segments: string[]) => config.prefix + segments.filter(Boolean).join('_');
