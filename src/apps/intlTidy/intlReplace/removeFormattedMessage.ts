@@ -1,6 +1,7 @@
 import j, { Collection } from 'jscodeshift';
 import { messages } from '..';
 import { buildI18nTCall } from '../utils/starling';
+import { getFlattenKey } from '../utils';
 
 const matchFormattedMessage = (node: any): boolean => {
   return (
@@ -51,8 +52,10 @@ export const transformFormattedMessage = (root: Collection, filePath: string) =>
     const parent = path.parent.node;
     const { id, idNode, values, defaultMessage, fallbackString } = getFormattedMessageProps(path.node);
     if (!id) return;
-    const defaultValue = messages[id] || id || defaultMessage || '';
-    const callExpr = buildI18nTCall(id, values, defaultValue);
+    const parsedId = getFlattenKey([id]);
+    const defaultValue = messages[parsedId] || defaultMessage || parsedId;
+    const params = values && values.type === 'ObjectExpression' ? values : j.objectExpression([]);
+    const callExpr = buildI18nTCall(parsedId, params, defaultValue);
 
     const parentType = parent.type;
     if (

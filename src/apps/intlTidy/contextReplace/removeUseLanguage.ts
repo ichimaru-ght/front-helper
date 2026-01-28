@@ -84,7 +84,7 @@ export const replaceUseLanguageIdentifiers = (root: Collection, state: UseLangua
     .filter((p) => candidates.includes(p.node.name) && isReferenceIdentifier(p))
     .replaceWith((p) => {
       const segments = state.bindingNameToSegments.get(p.node.name);
-      if (!segments || segments.length === 0) return p.node;
+      if (!segments || segments.length <= 1) return p.node;
       const key = getFlattenKey(segments);
       return buildI18nTCall(key, j.objectExpression([]), messages[key] || key);
     });

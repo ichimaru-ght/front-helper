@@ -9,8 +9,9 @@ export const flattenLanguageJson = (input: any, prefix: string[] = []): Record<s
       Object.assign(out, flattenLanguageJson(v, nextPrefix));
       return;
     }
-    const key = getFlattenKey(nextPrefix);
-    if (!key) return;
+    const pathKey = nextPrefix.filter(Boolean).join('_');
+    if (!pathKey) return;
+    const key = config.prefix + pathKey;
     out[key] = typeof v === 'string' ? v : String(v ?? '');
   });
   return out;

@@ -28,7 +28,7 @@ export const exportExcel = (
   const [sourceInfo, ...others] = languageJsonList;
   const sourceMap = flattenLanguageJson(require(sourceInfo.jsonPath));
   const otherMaps = others.map((item) => ({ lang: item.language, map: flattenLanguageJson(require(item.jsonPath)) }));
-  const columns = ['keys', sourceInfo.language, ...otherMaps.map((o) => o.lang)];
+  const columns = ['keys', 'source', ...otherMaps.map((o) => o.lang)];
   createExcel({ columns, outputPath, sheetName });
   const rows = buildRows(Array.from(usedKeys), sourceMap, otherMaps);
   appendRows({ outputPath, rows, sheetName });

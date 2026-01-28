@@ -1,6 +1,6 @@
 {
   "name": "front-helper",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "一个前端小工具",
   "main": "dist/index.js",
   "keywords": [
@@ -20,7 +20,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ichimaru-ght/front-helper.git"
+    "url": "git+https://github.com/ichimaru-ght/front-helper.git"
   },
   "author": "1363773659@qq.com",
   "license": "ISC",

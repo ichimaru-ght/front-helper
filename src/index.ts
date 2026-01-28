@@ -8,8 +8,8 @@ import webpCompress from './apps/webpCompress';
 const main = () => {
   program
     .version('0.0.1')
-    .option('-P --path <path>', 'root path', 'src')
-    .option('-m --mode <mode>', 'intl or context', 'context');
+    .option('-P --path <path>', 'root path', '')
+    .option('-m --mode <mode>', 'intl or context', '');
 
   program
     .command('svg')

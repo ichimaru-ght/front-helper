@@ -1,6 +1,6 @@
 import j, { Collection } from 'jscodeshift';
 import { messages } from '..';
-import { getPropName, flattenObjectExpressionToProperties } from './utils';
+import { getPropName } from './utils';
 import { collectState } from './collectState';
 import { buildI18nTCall } from '../utils/starling';
 import { replaceUseLanguageIdentifiers } from './removeUseLanguage';
@@ -102,8 +102,13 @@ const replaceGetMessageCalls = (root: Collection, state: UseLanguageState) => {
           });
         }
 
-        const valueProps = flattenObjectExpressionToProperties(valueNode);
-        return buildI18nTCall(key, j.objectExpression(valueProps), messages[key] || key);
+        let paramsExpr: any = valueNode;
+        if (!paramsExpr) {
+          paramsExpr = j.objectExpression([]);
+        } else if (paramsExpr.type !== 'ObjectExpression') {
+          paramsExpr = j.objectExpression([j.spreadElement(paramsExpr)]);
+        }
+        return buildI18nTCall(key, paramsExpr, messages[key] || key);
       });
   };
 

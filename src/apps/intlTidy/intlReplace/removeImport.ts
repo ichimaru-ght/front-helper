@@ -74,22 +74,17 @@ export const removeAllReactIntlImports = (root: Collection) => {
   } else {
     edenImport.forEach((p) => {
       const node = p.node;
-      const names = (node.specifiers || [])
+      const specifiers = node.specifiers || [];
+      const names = specifiers
         .filter((s: any) => s.type === 'ImportSpecifier')
         .map((s: any) => (s.imported as any)?.name || (s.imported as any)?.value);
-      const keepNames: string[] = [];
-      if (needI18n) keepNames.push('I18n');
-      if (needUseTranslation) keepNames.push('useTranslation');
-      node.specifiers = (node.specifiers || []).filter((s: any) => {
-        if (s.type !== 'ImportSpecifier') return true;
-        const name = (s.imported as any)?.name || (s.imported as any)?.value;
-        return name !== 'I18n' && name !== 'useTranslation';
-      });
-      keepNames.forEach((n) => {
-        if (!names.includes(n)) {
-          (node.specifiers = node.specifiers || []).push(j.importSpecifier(j.identifier(n), j.identifier(n)));
-        }
-      });
+      if (needI18n && !names.includes('I18n')) {
+        specifiers.push(j.importSpecifier(j.identifier('I18n'), j.identifier('I18n')));
+      }
+      if (needUseTranslation && !names.includes('useTranslation')) {
+        specifiers.push(j.importSpecifier(j.identifier('useTranslation'), j.identifier('useTranslation')));
+      }
+      node.specifiers = specifiers;
     });
   }
 };

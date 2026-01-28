@@ -1,6 +1,7 @@
 import j, { Collection } from 'jscodeshift';
 import { messages } from '..';
 import { buildTCall } from '../utils/starling';
+import { getFlattenKey } from '../utils';
 
 const getMessageIdAndDefault = (idObj: any): { id: string | null; defaultMessage: string | null } => {
   if (idObj.type !== 'ObjectExpression') return { id: null, defaultMessage: null };
@@ -49,7 +50,9 @@ export const transformIntlMessages = (root: Collection, filePath: string) => {
     if (!messageId) {
       return path.node;
     }
-    const defaultValue = messages[messageId] || messageId;
-    return buildTCall(messageId, paramsObj, defaultMessage || defaultValue);
+    const parsedId = getFlattenKey([messageId]);
+    const defaultValue = messages[parsedId] || parsedId;
+    const params = paramsObj && paramsObj.type === 'ObjectExpression' ? paramsObj : j.objectExpression([]);
+    return buildTCall(parsedId, params, defaultMessage || defaultValue);
   });
 };
