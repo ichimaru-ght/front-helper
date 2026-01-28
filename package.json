@@ -1,6 +1,6 @@
 {
   "name": "front-helper",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "一个前端小工具",
   "main": "dist/index.js",
   "keywords": [
@@ -9,7 +9,7 @@
     "svg"
   ],
   "bin": {
-    "helper": "dist/index.js"
+    "front-helper": "dist/index.js"
   },
   "scripts": {
     "build": "node config/build.js",
