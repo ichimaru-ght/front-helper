@@ -12,6 +12,21 @@ const isReferenceIdentifier = (p: any) => {
   if (!parent) return true;
 
   if (parent.type === 'VariableDeclarator' && parent.id === p.node) return false;
+  // Identifiers that are part of a VariableDeclarator's ObjectPattern (binding position) are NOT references
+  {
+    let cur = p.parentPath;
+    let objectPatternNode: any = null;
+    while (cur) {
+      const n = cur.node;
+      if (!n) break;
+      if (n.type === 'ObjectPattern') objectPatternNode = n;
+      if (n.type === 'VariableDeclarator') {
+        if (objectPatternNode && n.id === objectPatternNode) return false;
+        break;
+      }
+      cur = cur.parentPath;
+    }
+  }
   if (
     parent.type === 'FunctionDeclaration' ||
     parent.type === 'FunctionExpression' ||
@@ -84,7 +99,7 @@ export const replaceUseLanguageIdentifiers = (root: Collection, state: UseLangua
     .filter((p) => candidates.includes(p.node.name) && isReferenceIdentifier(p))
     .replaceWith((p) => {
       const segments = state.bindingNameToSegments.get(p.node.name);
-      if (!segments || segments.length <= 1) return p.node;
+      if (!segments || segments.length === 0) return p.node;
       const key = getFlattenKey(segments);
       return buildI18nTCall(key, j.objectExpression([]), messages[key] || key);
     });
@@ -98,17 +113,50 @@ export const replaceUseLanguageIdentifiers = (root: Collection, state: UseLangua
         nextDecls.push(d);
         return;
       }
-      const names = collectBindingNamesFromPattern(d.id);
-      const anyUsed = names.some((n) => {
-        return (
-          root
-            .find(j.Identifier, { name: n })
-            .filter((pp) => isReferenceIdentifier(pp))
-            .size() > 0
-        );
-      });
-      if (anyUsed) {
-        nextDecls.push(d);
+      const isNameUsed = (n: string) =>
+        root
+          .find(j.Identifier, { name: n })
+          .filter((pp) => isReferenceIdentifier(pp))
+          .size() > 0;
+      if (d.id?.type === 'Identifier') {
+        if (isNameUsed(d.id.name)) nextDecls.push(d);
+        return;
+      }
+      if (d.id?.type === 'ObjectPattern') {
+        const prunePattern = (pattern: any): any | null => {
+          const props = (pattern.properties || []).reduce((acc: any[], prop: any) => {
+            if (prop.type === 'RestElement') {
+              const rn = prop.argument?.name;
+              if (rn && isNameUsed(rn)) acc.push(prop);
+              return acc;
+            }
+            if (prop.type !== 'Property' && prop.type !== 'ObjectProperty') return acc;
+            const value = prop.value;
+            if (value?.type === 'Identifier') {
+              if (isNameUsed(value.name)) acc.push(prop);
+              return acc;
+            }
+            if (value?.type === 'AssignmentPattern' && value.left?.type === 'Identifier') {
+              if (isNameUsed(value.left.name)) acc.push(prop);
+              return acc;
+            }
+            if (value?.type === 'ObjectPattern') {
+              const child = prunePattern(value);
+              if (child && (child.properties || []).length > 0) {
+                const newProp = { ...prop, value: child };
+                acc.push(newProp);
+              }
+              return acc;
+            }
+            return acc;
+          }, []);
+          if (props.length === 0) return null;
+          return j.objectPattern(props);
+        };
+        const pruned = prunePattern(d.id);
+        if (pruned) {
+          nextDecls.push({ ...d, id: pruned });
+        }
       }
     });
     if (nextDecls.length === 0) {

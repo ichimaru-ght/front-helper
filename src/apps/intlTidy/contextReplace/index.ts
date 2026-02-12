@@ -15,7 +15,9 @@ const isGetMessageCallee = (callee: any) => {
   if (!callee) return false;
   if (callee.type === 'Identifier') return callee.name === 'getMessage';
   if (callee.type === 'MemberExpression' || callee.type === 'OptionalMemberExpression') {
-    if (callee.computed) return false;
+    if (callee.computed) {
+      return callee.property?.type === 'StringLiteral' && callee.property.value === 'getMessage';
+    }
     return callee.property?.type === 'Identifier' && callee.property.name === 'getMessage';
   }
   return false;
@@ -145,6 +147,37 @@ const replaceUseLanguageMemberExpressions = (root: Collection, state: UseLanguag
   if (OptionalMemberExpression) replace(OptionalMemberExpression);
 };
 
+const collectUsedBindingRoots = (root: Collection, state: UseLanguageState) => {
+  const used = new Set<string>();
+  const markObject = (obj: any) => {
+    if (!obj) return;
+    const node = obj.type === 'ChainExpression' ? obj.expression : obj;
+    if (node?.type === 'Identifier' && state.bindingNameToSegments.has(node.name)) {
+      used.add(node.name);
+    }
+  };
+  // member/object usage
+  root.find(j.MemberExpression).forEach((p) => markObject((p.node as any).object));
+  const OptionalMemberExpression = (j as any).OptionalMemberExpression;
+  if (OptionalMemberExpression) root.find(OptionalMemberExpression).forEach((p: any) => markObject(p.node.object));
+  // getMessage base usage
+  root
+    .find(j.CallExpression)
+    .filter((p) => isGetMessageCallee(p.node.callee))
+    .forEach((p) => {
+      const base = (p.node.arguments || [])[0];
+      if (!base) return;
+      if (base.type === 'Identifier') {
+        if (state.bindingNameToSegments.has(base.name)) used.add(base.name);
+        return;
+      }
+      if (base.type === 'MemberExpression' || base.type === 'OptionalMemberExpression') {
+        markObject((base as any).object);
+      }
+    });
+  return used;
+};
+
 const ensureI18nImport = (root: Collection) => {
   const needI18n =
     root
@@ -216,6 +249,7 @@ const cleanupUnusedImports = (root: Collection, state: UseLanguageState) => {
 };
 
 export const handleContextReplace = (root: any, filePath: string) => {
+  console.log('context mode');
   const collection: Collection = root;
   const state = collectState(collection);
 
@@ -227,7 +261,18 @@ export const handleContextReplace = (root: any, filePath: string) => {
 
   replaceGetMessageCalls(collection, stateForGetMessage);
   replaceUseLanguageMemberExpressions(collection, state);
-  replaceUseLanguageIdentifiers(collection, state);
+  const objectUsedNames = collectUsedBindingRoots(collection, state);
+  const prunedBinding = new Map<string, string[]>();
+  state.bindingNameToSegments.forEach((seg, name) => {
+    if (!objectUsedNames.has(name)) {
+      prunedBinding.set(name, seg);
+    }
+  });
+  const stateForIdentifiers: UseLanguageState = {
+    rootObjectNames: state.rootObjectNames,
+    bindingNameToSegments: prunedBinding,
+  };
+  replaceUseLanguageIdentifiers(collection, stateForIdentifiers);
   ensureI18nImport(collection);
   cleanupUnusedImports(collection, state);
 };
